@@ -34,6 +34,14 @@ export function findCached(items: ExtractResult[], id: string): ExtractResult | 
   return items.find((item) => item.id === id);
 }
 
+export function toggleSaved(items: ExtractResult[], id: string): ExtractResult[] {
+  const next = items.map((item) =>
+    item.id === id ? { ...item, saved: !item.saved } : item,
+  );
+  saveHistory(next);
+  return next;
+}
+
 export function loadSettings(): { bearerToken: string } {
   if (typeof window === "undefined") return { bearerToken: "" };
   try {

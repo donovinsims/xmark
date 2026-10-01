@@ -51,6 +51,8 @@ export type ExtractResult = {
   posts: PostBody[];
   markdown: string;
   extractedAt: number;
+  /** Local-only Vault preference. Omitted records are treated as unsaved. */
+  saved?: boolean;
 };
 
 export type ExtractErrorCode = "gone" | "private" | "invalid" | "network" | "empty";
