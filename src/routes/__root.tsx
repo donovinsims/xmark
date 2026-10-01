@@ -19,7 +19,7 @@ export const Route = createRootRoute({
         name: "description",
         content: "Paste a public X post. Get the thread as Markdown.",
       },
-      { name: "theme-color", content: "#FAFAFA" },
+      { name: "theme-color", content: "#131316" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "mobile-web-app-capable", content: "yes" },
