@@ -4,3 +4,6 @@ node_modules/
 .env
 .env.*
 .vercel
+
+# opencode local agent state
+.opencode/
