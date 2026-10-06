@@ -27,3 +27,18 @@ button, input, textarea { font:inherit; touch-action:manipulation; } button, [ro
 @media (max-width:390px) { .composer-actions .button-primary,.composer-actions .button-secondary { padding:0 11px; }.vault-actions { flex-wrap:wrap; }.settings-card { align-items:flex-start; flex-direction:column; }.mode-switch { align-self:stretch; }.mode-switch button { flex:1; justify-content:center; }.danger-zone .button-danger { width:100%; }.reader-topbar { grid-template-columns:auto minmax(0,1fr) auto; }.reader-topbar>div .icon-button:first-child { display:none; } }
 @media (max-width:360px) { .composer-actions .button-primary,.composer-actions .button-secondary { padding:0 9px; font-size:14px; }.reader-tabs button { font-size:13px; }.bottom-nav { padding-left:10px; padding-right:10px; }.topbar-inner { padding:0 14px; gap:10px; }.brand h1 { font-size:19px; } }
 .reader-content { overscroll-behavior:contain; }
+
+/* Vault mobile overflow containment — flex/grid items default min-width:auto, so a nowrap title widens the page; clip stops horizontal panning (hidden as pre-clip fallback). */
+html, body, .coss-app, .coss-main, .vault-view, .vault-list { min-width:0; max-width:100%; overflow-x:hidden; overflow-x:clip; }
+.vault-view { max-width:min(620px,100%); }
+.vault-card { min-width:0; overflow:hidden; }
+.vault-main { min-width:0; }
+.vault-main .file-type { flex:none; }
+.vault-title { flex:1 1 auto; min-width:0; overflow:hidden; }
+.vault-actions { display:flex; flex-wrap:wrap; min-width:0; }
+.copy-button { flex:1 1 auto; min-width:0; }
+.vault-actions .saved-button { flex:none; }
+.vault-dock { flex-wrap:wrap; min-width:0; }
+.vault-dock .button-primary { min-width:0; }
+.vault-dock>span { flex:none; white-space:nowrap; }
+.search-input>svg, .search-input>span { flex:none; white-space:nowrap; }
