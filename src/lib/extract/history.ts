@@ -57,6 +57,12 @@ export function toggleSaved(items: ExtractResult[], id: string): ExtractResult[]
   return next;
 }
 
+export function removeHistory(items: ExtractResult[], id: string): ExtractResult[] {
+  const next = items.filter((item) => item.id !== id);
+  saveHistory(next);
+  return next;
+}
+
 export function loadSettings(): { bearerToken: string } {
   if (typeof window === "undefined") return { bearerToken: "" };
   try {
