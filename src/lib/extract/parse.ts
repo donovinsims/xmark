@@ -62,6 +62,35 @@ export function parseInput(raw: string): ParsedInput {
   };
 }
 
+/** A successful parse plus the raw token it came from (used as extract input). */
+export type ParsedBulkItem = Extract<ParsedInput, { ok: true }> & { raw: string };
+
+const BULK_MAX = 20;
+
+/**
+ * Split a bulk paste (whitespace / commas / newlines) and parse each token with
+ * `parseInput`. Dedupes by status ID, caps at 20 unique IDs, and keeps the
+ * tokens that failed to parse so they can stay visible in the queue.
+ */
+export function parseMany(raw: string): { valid: ParsedBulkItem[]; invalid: string[] } {
+  const tokens = raw.split(/[\s,]+/).filter(Boolean);
+  const valid: ParsedBulkItem[] = [];
+  const invalid: string[] = [];
+  const seen = new Set<string>();
+  for (const token of tokens) {
+    const parsed = parseInput(token);
+    if (!parsed.ok) {
+      invalid.push(token);
+      continue;
+    }
+    if (seen.has(parsed.id)) continue;
+    if (valid.length >= BULK_MAX) continue;
+    seen.add(parsed.id);
+    valid.push({ ...parsed, raw: token });
+  }
+  return { valid, invalid };
+}
+
 export function canonicalPermalink(id: string, handle?: string): string {
   if (handle) return `https://x.com/${handle}/status/${id}`;
   return `https://x.com/i/status/${id}`;
