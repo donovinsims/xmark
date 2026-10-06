@@ -4,7 +4,7 @@ import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "Xtract";
+const APP_NAME = "pastepost";
 
 export const Route = createRootRoute({
   head: () => ({

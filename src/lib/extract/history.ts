@@ -1,13 +1,28 @@
 import type { ExtractResult } from "./types";
 
-const HISTORY_KEY = "xtract.history";
-const SETTINGS_KEY = "xtract.settings";
+const HISTORY_KEY = "pastepost.history";
+const SETTINGS_KEY = "pastepost.settings";
+const LEGACY_HISTORY_KEY = "xtract.history";
+const LEGACY_SETTINGS_KEY = "xtract.settings";
 const MAX = 20;
+
+function readLegacy(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
 
 export function loadHistory(): ExtractResult[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(HISTORY_KEY);
+    let raw = window.localStorage.getItem(HISTORY_KEY);
+    if (!raw) {
+      raw = readLegacy(LEGACY_HISTORY_KEY);
+      if (raw) saveHistory(JSON.parse(raw) as ExtractResult[]);
+    }
     if (!raw) return [];
     const parsed = JSON.parse(raw) as ExtractResult[];
     return Array.isArray(parsed) ? parsed.slice(0, MAX) : [];
@@ -45,7 +60,15 @@ export function toggleSaved(items: ExtractResult[], id: string): ExtractResult[]
 export function loadSettings(): { bearerToken: string } {
   if (typeof window === "undefined") return { bearerToken: "" };
   try {
-    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    let raw = window.localStorage.getItem(SETTINGS_KEY);
+    if (!raw) {
+      const legacy = readLegacy(LEGACY_SETTINGS_KEY);
+      if (legacy) {
+        const legacyParsed = JSON.parse(legacy) as { bearerToken?: string };
+        saveSettings({ bearerToken: legacyParsed.bearerToken ?? "" });
+        raw = legacy;
+      }
+    }
     if (!raw) return { bearerToken: "" };
     const parsed = JSON.parse(raw) as { bearerToken?: string };
     return { bearerToken: parsed.bearerToken ?? "" };

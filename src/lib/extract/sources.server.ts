@@ -443,7 +443,7 @@ function throwIfFxFatal(data: Record<string, unknown>, source: string) {
   if (code === 401 || message === "PRIVATE_TWEET") {
     throw new FatalExtractError(
       "private",
-      "This post is private. Xtract only extracts public posts.",
+      "This post is private. pastepost only extracts public posts.",
       source,
     );
   }
@@ -854,7 +854,7 @@ async function fetchOk(
     if (/PRIVATE/i.test(body)) {
       throw new FatalExtractError(
         "private",
-        "This post is private. Xtract only extracts public posts.",
+        "This post is private. pastepost only extracts public posts.",
         url,
       );
     }
