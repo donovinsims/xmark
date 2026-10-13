@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
@@ -5,6 +6,19 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "pastepost";
+
+function ThemeToaster() {
+  const [dark, setDark] = useState(true);
+  useEffect(() => {
+    const root = document.documentElement;
+    const update = () => setDark(root.classList.contains("dark"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return <Toaster theme={dark ? "dark" : "light"} position="bottom-center" duration={2200} offset={88} />;
+}
 
 export const Route = createRootRoute({
   head: () => ({
@@ -41,7 +55,7 @@ export const Route = createRootRoute({
         <PreviewHostBridge />
         <AuthProvider>
           <Outlet />
-          <Toaster theme="light" position="bottom-center" duration={2200} offset={88} />
+          <ThemeToaster />
         </AuthProvider>
         <Scripts />
       </body>
