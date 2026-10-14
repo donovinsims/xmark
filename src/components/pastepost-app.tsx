@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LaunchDiagnostic, useLaunchDiagnostics } from "./launch-diagnostic";
 import { Archive, ArrowUp, Bookmark, Check, ChevronLeft, Copy, Download, FileCode2, FileText, FolderOpen, Link, List, LoaderCircle, Moon, RefreshCw, Search, Send, Settings, Share2, Sun, Trash2, X } from "lucide-react";
 import { strToU8, zipSync } from "fflate";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ const THEME_KEY = "pastepost.theme";
 const LEGACY_THEME_KEY = "xtract.theme";
 
 export function PastepostApp({ sharedUrl }: { sharedUrl?: string }) {
+  const launchSnapshots = useLaunchDiagnostics();
   const [appView, setAppView] = useState<AppView>("extract");
   const [theme, setTheme] = useState<Theme>("dark");
   const [input, setInput] = useState("");
@@ -189,6 +191,7 @@ export function PastepostApp({ sharedUrl }: { sharedUrl?: string }) {
   return <div className="coss-app obsidian-dashboard-shell">
     <TopBar view={appView} theme={theme} onTheme={() => setTheme((current) => current === "dark" ? "light" : "dark")} onSettings={() => setAppView("settings")} />
     <main className="coss-main">
+      <LaunchDiagnostic snapshots={launchSnapshots} />
       {appView === "extract" && <ExtractView input={input} setInput={(value) => { setInput(value); if (status === "error") { setStatus("idle"); setError(null); } }} inputRef={inputRef} canExtract={canExtract} loading={status === "loading"} error={status === "error" ? error : null} onExtract={() => void runExtract(input)} onRetry={() => void runExtract(input, true)} onSettings={() => setAppView("settings")} bulk={{ text: bulkText, onText: (value) => { setBulkText(value); if (!bulkRunning) setBulkRows([]); }, rows: bulkRowsForView, validCount: bulkParsed.valid.length, invalidCount: bulkParsed.invalid.length, running: bulkRunning, results: bulkResults, open: bulkOpen, collapsed: bulkRows.length > 0 && !bulkRunning && bulkResults.length > 0, onToggle: () => setBulkOpen((value) => !value), onRun: () => void runBulk(), onStop: () => { bulkStopRef.current = true; }, onExportMd: exportBulkMarkdown, onExportZip: exportBulkZip, onCopyAll: () => void copyText(bulkMarkdown(), "All markdown copied") }} />}
       {appView === "vault" && <VaultView items={filteredHistory} allCount={history.length} query={query} filter={filter} onQuery={setQuery} onFilter={setFilter} onOpen={openResult} onToggleSaved={updateSaved} onRemove={removeItem} onCopy={(item) => void copyText(item.markdown, "Markdown copied")} onShare={(item) => void shareResult(item)} onExport={exportVault} onClear={() => setClearOpen(true)} />}
       {appView === "settings" && <SettingsView theme={theme} onTheme={setTheme} bearerToken={bearerToken} onToken={setBearerToken} onClear={() => setClearOpen(true)} hasHistory={history.length > 0} />}
