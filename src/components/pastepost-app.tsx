@@ -19,7 +19,7 @@ type BulkSectionProps = { text: string; onText: (value: string) => void; rows: B
 const THEME_KEY = "pastepost.theme";
 const LEGACY_THEME_KEY = "xtract.theme";
 
-export function PastepostApp() {
+export function PastepostApp({ sharedUrl }: { sharedUrl?: string }) {
   const [appView, setAppView] = useState<AppView>("extract");
   const [theme, setTheme] = useState<Theme>("dark");
   const [input, setInput] = useState("");
@@ -42,6 +42,7 @@ export function PastepostApp() {
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkResults, setBulkResults] = useState<ExtractResult[]>([]);
   const bulkStopRef = useRef(false);
+  const consumedSharedUrl = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     setHistory(loadHistory());
@@ -153,6 +154,21 @@ export function PastepostApp() {
       setHistory(next); setResult(response.result); setReaderMode("preview"); setReaderOpen(true); setStatus("idle");
     } catch { setError({ code: "network", message: "Couldn’t reach this post. Try again, or paste the text.", tried: [] }); setStatus("error"); }
   }
+  useEffect(() => {
+    if (sharedUrl === undefined) {
+      consumedSharedUrl.current = undefined;
+      return;
+    }
+    if (!hydrated || consumedSharedUrl.current === sharedUrl) return;
+    consumedSharedUrl.current = sharedUrl;
+    const address = new URL(window.location.href);
+    address.searchParams.delete("url");
+    window.history.replaceState(window.history.state, "", address);
+    setAppView("extract");
+    setBulkOpen(false);
+    setInput(sharedUrl);
+    void runExtract(sharedUrl);
+  }, [hydrated, sharedUrl, runExtract]);
   function openResult(item: ExtractResult) { setResult(item); setInput(item.permalink || item.id); setReaderMode("preview"); setReaderOpen(true); setError(null); setStatus("idle"); }
   async function copyText(text: string, success = "Copied to clipboard") { try { await navigator.clipboard.writeText(text); toast.success(success); } catch { toast.error("Couldn’t copy to clipboard"); } }
   function downloadResult(item: ExtractResult) { downloadBlob(item.markdown, downloadFilename(item.author.handle, item.id), "text/markdown;charset=utf-8"); toast.success("Markdown download started"); }
