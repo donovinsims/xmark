@@ -33,7 +33,7 @@ export function loadHistory(): ExtractResult[] {
 
 export function saveHistory(items: ExtractResult[]): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, MAX)));
+  try { window.localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, MAX))); } catch { /* Storage is best-effort; keep this session usable. */ }
 }
 
 export function upsertHistory(
@@ -85,5 +85,5 @@ export function loadSettings(): { bearerToken: string } {
 
 export function saveSettings(settings: { bearerToken: string }): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  try { window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* Storage may be unavailable. */ }
 }

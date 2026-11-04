@@ -42,3 +42,27 @@ html, body, .coss-app, .coss-main, .vault-view, .vault-list { min-width:0; max-w
 .vault-dock .button-primary { min-width:0; }
 .vault-dock>span { flex:none; white-space:nowrap; }
 .search-input>svg, .search-input>span { flex:none; white-space:nowrap; }
+
+/* Installed Apple layouts remain usable even when safe-area insets are zero. */
+.coss-topbar { padding-top:env(safe-area-inset-top); padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+.coss-app { min-height:100dvh; padding-bottom:calc(90px + env(safe-area-inset-bottom)); }
+.bottom-nav { height:calc(72px + env(safe-area-inset-bottom)); }
+.reader-topbar { flex-shrink:0; min-height:calc(68px + env(safe-area-inset-top)); padding-top:env(safe-area-inset-top); padding-left:max(14px, env(safe-area-inset-left)); padding-right:max(14px, env(safe-area-inset-right)); }
+.reader-content { padding-bottom:calc(110px + env(safe-area-inset-bottom)); min-height:0; padding-left:max(18px, env(safe-area-inset-left)); padding-right:max(18px, env(safe-area-inset-right)); }
+.reader-dock { padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
+.composer-actions { flex-wrap:wrap; }
+:where(button,a,input,textarea,[tabindex]):focus-visible { outline:2px solid var(--ink); outline-offset:3px; }
+.dialog-backdrop { position:fixed; inset:auto; top:var(--dialog-top,0px); left:0; margin:0; width:100%; max-width:none; height:var(--dialog-height,100dvh); max-height:none; border:0; color:var(--ink); background:transparent; padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+.dialog-backdrop:not([open]) { display:none; }
+.dialog-backdrop::backdrop { background:rgb(0 0 0 / .55); }
+.dialog-card { max-height:100%; overflow-y:auto; overscroll-behavior:contain; }
+.dialog-card header { position:sticky; top:-18px; background:var(--surface); z-index:1; }
+@media (min-width:720px) { .coss-app { padding-bottom:0; } .bottom-nav { top:calc(60px + env(safe-area-inset-top)); height:auto; } }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
+
+.reader-overlay { margin:0; border:0; padding:0; width:100%; max-width:none; height:100dvh; max-height:none; color:var(--ink); }
+.reader-overlay:not([open]) { display:none; }
+@media (min-width:720px) { .reader-overlay { padding-left:82px; } }
+
+.coss-main { padding-left:max(18px,env(safe-area-inset-left)); padding-right:max(18px,env(safe-area-inset-right)); }
+.reader-dock { padding-left:max(18px,env(safe-area-inset-left)); padding-right:max(18px,env(safe-area-inset-right)); }

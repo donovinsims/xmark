@@ -21,6 +21,7 @@ export const Route = createRootRoute({
       },
       { name: "theme-color", content: "#131316" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "mobile-web-app-capable", content: "yes" },
     ],
@@ -29,13 +30,14 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/__grok/manifest.webmanifest" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   component: () => (
     <html lang="en" className="antialiased" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var t="dark";try{var s=localStorage.getItem("pastepost.theme")||localStorage.getItem("xtract.theme");if(s==="light"||s==="dark")t=s}catch(e){}document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.style.colorScheme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=t==="dark"?"#131316":"#fafafa"})()` }} />
       </head>
       <body className="bg-canvas text-text-primary">
         <PreviewHostBridge />
