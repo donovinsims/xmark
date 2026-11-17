@@ -180,7 +180,7 @@ export function PastepostVault({ account, revision, refresh, onOpen, onCopy, onS
     </div>}
     {importSummary && <p role="status">{importSummary}</p>}
     <label className="search-input"><Search size={16} />
-      <input aria-label="Search the Vault" placeholder="Search title, author, or post type…"
+      <input aria-label="Search the Vault" placeholder="Search title, author, or ID"
         value={query} maxLength={200} onChange={(event) => setQuery(event.target.value)} />
     </label>
     <div className="filter-row"><DashboardFilterMenu label="Show" value={filter} options={[
