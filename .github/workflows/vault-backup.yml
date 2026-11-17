@@ -47,12 +47,44 @@ jobs:
           test -s "$workdir/vault.dump"
           printf '%s\n' "$VAULT_BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
             --symmetric --cipher-algo AES256 --output "$workdir/vault.dump.gpg" "$workdir/vault.dump"
-          npx --yes vercel@59.0.0 blob put "$workdir/vault.dump.gpg" \
-            --access private --pathname "$key" --allow-overwrite true
+          node --input-type=module - "$workdir/vault.dump.gpg" "$key" "$workdir/download.gpg" <<'JS'
+          import { createReadStream, createWriteStream, statSync } from "node:fs";
+          import { Readable } from "node:stream";
+          import { pipeline } from "node:stream/promises";
+
+          const [encrypted, pathname, download] = process.argv.slice(2);
+          const token = process.env.BLOB_READ_WRITE_TOKEN;
+          const storeId = token.split("_")[3];
+          if (!storeId || !/^pastepost\/slot-\d{2}\.dump\.gpg$/.test(pathname)) {
+            throw new Error("Invalid backup store or destination");
+          }
+          const authorization = `Bearer ${token}`;
+          const length = String(statSync(encrypted).size);
+          const upload = await fetch("https://vercel.com/api/blob/?" + new URLSearchParams({ pathname }), {
+            method: "PUT",
+            headers: {
+              authorization, "x-api-version": "13", "x-vercel-blob-store-id": storeId,
+              "x-vercel-blob-access": "private", "x-allow-overwrite": "1",
+              "x-content-type": "application/octet-stream", "content-length": length,
+              "x-content-length": length, "x-cache-control-max-age": "60",
+            },
+            body: createReadStream(encrypted), duplex: "half", redirect: "error",
+          });
+          if (!upload.ok) throw new Error(`Private backup upload returned ${upload.status}`);
+          const blob = new URL((await upload.json()).url);
+          if (blob.protocol !== "https:" || blob.hostname !== `${storeId.toLowerCase()}.private.blob.vercel-storage.com` ||
+              blob.pathname !== `/${pathname}` || blob.search) {
+            throw new Error("Unexpected private backup URL");
+          }
+          if (process.env.VERIFY_RESTORE === "true") {
+            const result = await fetch(blob, { headers: { authorization }, cache: "no-store", redirect: "error" });
+            if (!result.ok || !result.body) throw new Error(`Private backup download returned ${result.status}`);
+            await pipeline(Readable.fromWeb(result.body), createWriteStream(download, { mode: 0o600 }));
+          }
+          JS
           printf 'Backed up UTC day %s to %s\n' "$(date -u +%F)" "$key"
 
           if [ "${VERIFY_RESTORE:-false}" = true ]; then
-            npx --yes vercel@59.0.0 blob get "$key" --access private --output "$workdir/download.gpg"
             printf '%s\n' "$VAULT_BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
               --output "$workdir/restored.dump" --decrypt "$workdir/download.gpg"
             cmp "$workdir/vault.dump" "$workdir/restored.dump"
