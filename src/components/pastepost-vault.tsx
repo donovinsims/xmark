@@ -147,23 +147,27 @@ export function PastepostVault({ account, revision, refresh, onOpen, onCopy, onS
 
   return <section className="vault-view">
     <div className="vault-heading"><div><h2>Your Markdown Vault</h2></div></div>
-    <div className="vault-tools">
-      <DashboardButton variant="secondary" size="sm" disabled={busy !== null} onClick={() => void exportAll()}>
-        <Download size={16} />{busy === "export" ? "Exporting…" : "Export entire Vault"}
-      </DashboardButton>
-      <DashboardButton variant="secondary" size="sm" disabled={busy !== null || Boolean(review)}
-        onClick={() => document.getElementById("pastepost-backup-input")?.click()}>Import ZIP</DashboardButton>
-      <input type="file" id="pastepost-backup-input" hidden accept=".zip,application/zip" onChange={(event) => {
-        const file = event.target.files?.[0];
-        if (file) void selectZip(file);
-        event.target.value = "";
-      }} />
-      {browserArchive.length > 0 && !browserImported && <DashboardButton variant="secondary" size="sm"
-        disabled={busy !== null || Boolean(review)} onClick={() => {
-          setImportSummary("");
-          setReview({ entries: browserArchive, skipped: 0, browser: true });
-        }}>Recover from this browser</DashboardButton>}
-    </div>
+    <details className="vault-backup">
+      <summary>Backup &amp; recovery</summary>
+      <div className="vault-tools">
+        <DashboardButton variant="secondary" size="sm" disabled={busy !== null} onClick={() => void exportAll()}>
+          <Download size={16} />{busy === "export" ? "Exporting…" : "Export entire Vault"}
+        </DashboardButton>
+        <DashboardButton variant="secondary" size="sm" disabled={busy !== null || Boolean(review)}
+          onClick={() => document.getElementById("pastepost-backup-input")?.click()}>Import ZIP</DashboardButton>
+        <input type="file" id="pastepost-backup-input" hidden accept=".zip,application/zip" onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void selectZip(file);
+          event.target.value = "";
+        }} />
+      </div>
+    </details>
+    {browserArchive.length > 0 && !browserImported && <div className="vault-tools vault-recover">
+      <DashboardButton variant="secondary" size="sm" disabled={busy !== null || Boolean(review)} onClick={() => {
+        setImportSummary("");
+        setReview({ entries: browserArchive, skipped: 0, browser: true });
+      }}>Recover from this browser</DashboardButton>
+    </div>}
     {review && <div className="vault-recovery">
       <p>Merge {review.entries.length} {review.entries.length === 1 ? "post" : "posts"} into this account?
         {review.skipped > 0 && ` ${review.skipped} entries will be skipped.`}</p>
@@ -176,7 +180,7 @@ export function PastepostVault({ account, revision, refresh, onOpen, onCopy, onS
     </div>}
     {importSummary && <p role="status">{importSummary}</p>}
     <label className="search-input"><Search size={16} />
-      <input aria-label="Search the Vault" placeholder="Search title, author, or post type…"
+      <input aria-label="Search the Vault" placeholder="Search title, author, or ID"
         value={query} maxLength={200} onChange={(event) => setQuery(event.target.value)} />
     </label>
     <div className="filter-row"><DashboardFilterMenu label="Show" value={filter} options={[
@@ -206,7 +210,7 @@ export function PastepostVault({ account, revision, refresh, onOpen, onCopy, onS
         </article>)}
         {page.next && <DashboardButton variant="secondary" size="sm" disabled={loading}
           onClick={() => void loadMore()}>{loading ? "Loading…" : "Load more"}</DashboardButton>}
-      </div> : <div className="vault-empty"><FolderOpen size={24} /><p>{filter === "trash" ? "Trash is empty" :
-        query ? "No matching posts" : filter === "favorites" ? "No favorites yet" : "Extract a post to start your Vault"}</p></div>}
+      </div> : <div className="empty-vault"><FolderOpen size={24} /><h3>{filter === "trash" ? "Trash is empty" :
+        query ? "No matching posts" : filter === "favorites" ? "No favorites yet" : "Extract a post to start your Vault"}</h3></div>}
   </section>;
 }
