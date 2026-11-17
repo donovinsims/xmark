@@ -87,3 +87,24 @@ html, body, .coss-app, .coss-main, .vault-view, .vault-list { min-width:0; max-w
 .vault-recovery p { margin-bottom: 8px; }
 .vault-sync button { text-decoration: underline; min-height: 36px; }
 .reader-sync { color: var(--muted); margin: 0 auto 8px; max-width: 620px; font-size: 13px; }
+
+/* On phones a returning reader gets the field sooner; the full intro stays on wider screens. */
+@media (max-width:719px) {
+  .extract-intro { margin:6px 0 16px; }
+  .extract-intro .eyebrow { display:none; }
+  .extract-intro h2 { font-size:22px; line-height:1.2; }
+  .extract-intro > p:last-child { display:none; }
+  .composer-actions--extract { display:grid; grid-template-columns:1fr 1fr; }
+  .composer-actions--extract>button { width:100%; }
+}
+
+/* Vault backup stays one tap away without pushing the archive down. */
+.vault-backup { margin:0 0 14px; border:1px solid var(--border); border-radius:10px; background:var(--surface); }
+.vault-backup>summary { display:flex; align-items:center; gap:8px; min-height:44px; padding:0 12px; color:var(--muted); cursor:pointer; font:600 13px/1 JetBrains Mono,monospace; list-style:none; }
+.vault-backup>summary::-webkit-details-marker { display:none; }
+.vault-backup>summary::after { content:"+"; margin-left:auto; color:var(--faint); font-size:16px; line-height:1; }
+.vault-backup[open]>summary { color:var(--ink); }
+.vault-backup[open]>summary::after { content:"−"; }
+.vault-backup>summary:focus-visible { outline:2px solid var(--ink); outline-offset:2px; border-radius:9px; }
+.vault-backup .vault-tools { padding:4px 12px 12px; }
+.vault-recover { margin:0 0 14px; }
