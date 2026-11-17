@@ -47,12 +47,17 @@ jobs:
           test -s "$workdir/vault.dump"
           printf '%s\n' "$VAULT_BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
             --symmetric --cipher-algo AES256 --output "$workdir/vault.dump.gpg" "$workdir/vault.dump"
+          # `--rw-token` scopes the CLI to the backup store: CI has no Vercel
+          # login, so without it the CLI aborts with "No existing credentials
+          # found" after the dump is already encrypted.
           npx --yes vercel@59.0.0 blob put "$workdir/vault.dump.gpg" \
-            --access private --pathname "$key" --allow-overwrite true
+            --access private --pathname "$key" --allow-overwrite true \
+            --rw-token "$BLOB_READ_WRITE_TOKEN"
           printf 'Backed up UTC day %s to %s\n' "$(date -u +%F)" "$key"
 
           if [ "${VERIFY_RESTORE:-false}" = true ]; then
-            npx --yes vercel@59.0.0 blob get "$key" --access private --output "$workdir/download.gpg"
+            npx --yes vercel@59.0.0 blob get "$key" --access private \
+              --output "$workdir/download.gpg" --rw-token "$BLOB_READ_WRITE_TOKEN"
             printf '%s\n' "$VAULT_BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
               --output "$workdir/restored.dump" --decrypt "$workdir/download.gpg"
             cmp "$workdir/vault.dump" "$workdir/restored.dump"
