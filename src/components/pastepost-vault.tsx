@@ -206,7 +206,7 @@ export function PastepostVault({ account, revision, refresh, onOpen, onCopy, onS
         </article>)}
         {page.next && <DashboardButton variant="secondary" size="sm" disabled={loading}
           onClick={() => void loadMore()}>{loading ? "Loading…" : "Load more"}</DashboardButton>}
-      </div> : <div className="vault-empty"><FolderOpen size={24} /><p>{filter === "trash" ? "Trash is empty" :
-        query ? "No matching posts" : filter === "favorites" ? "No favorites yet" : "Extract a post to start your Vault"}</p></div>}
+      </div> : <div className="empty-vault"><FolderOpen size={24} /><h3>{filter === "trash" ? "Trash is empty" :
+        query ? "No matching posts" : filter === "favorites" ? "No favorites yet" : "Extract a post to start your Vault"}</h3></div>}
   </section>;
 }
