@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { createQaSession, qaBase, seedQaVault } from "./pastepost-qa-context.mjs";
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const link = "https://x.com/test/status/1234567890123456789";
@@ -7,11 +8,11 @@ const result = { id: "1234567890123456789", kind: "post", source: "QA", permalin
 try {
   for (const mode of ["success", "cached", "empty", "invalid", "denied"]) {
     const context = await browser.newContext();
+    await createQaSession(context);
     await context.addInitScript(({ mode, link, result }) => {
       window.qaReads = 0;
       window.qaCalls = [];
       window.qaResult = result;
-      if (mode === "cached") localStorage.setItem("pastepost.history", JSON.stringify([result]));
       Object.defineProperty(navigator, "clipboard", { configurable: true, value: {
         readText: async () => {
           window.qaReads++;
@@ -23,7 +24,8 @@ try {
     }, { mode, link, result });
     await context.route(/\/src\/lib\/extract\/extract-fn\.ts(?:\?|$)/, route => route.fulfill({ contentType: "application/javascript", body: "export async function extractPost({data}) { window.qaCalls.push(data); return {ok:true,result:window.qaResult}; }" }));
     const page = await context.newPage();
-    await page.goto("http://127.0.0.1:8084/");
+    if (mode === "cached") await seedQaVault(page, result);
+    else await page.goto(qaBase);
     const button = page.getByRole("button", { name: "Paste & Extract", exact: true });
     await button.waitFor();
     assert.equal(await page.evaluate(() => window.qaReads), 0);

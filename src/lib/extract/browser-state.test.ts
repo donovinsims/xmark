@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { saveHistory, saveSettings } from "./history.ts";
+import { saveSettings } from "./history.ts";
 import { loadDrafts, readLocal, writeLocal, readLinkDraft } from "./browser-state.ts";
 
 test("drafts restore and storage failures are harmless", () => {
@@ -14,7 +14,6 @@ test("drafts restore and storage failures are harmless", () => {
   assert.deepEqual(loadDrafts(), { input: "", bulkText: "" });
   Object.defineProperty(globalThis, "window", { configurable: true, value: { get localStorage() { throw new Error("blocked"); } } });
   assert.equal(readLocal("anything"), null);
-  assert.doesNotThrow(() => saveHistory([]));
   assert.doesNotThrow(() => saveSettings({ bearerToken: "" }));
   assert.doesNotThrow(() => writeLocal("anything", "value"));
   assert.deepEqual(loadDrafts(), { input: "", bulkText: "" });

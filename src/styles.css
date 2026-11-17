@@ -74,3 +74,14 @@ html, body, .coss-app, .coss-main, .vault-view, .vault-list { min-width:0; max-w
 
 .coss-main { padding-left:max(18px,env(safe-area-inset-left)); padding-right:max(18px,env(safe-area-inset-right)); }
 .reader-dock { padding-left:max(18px,env(safe-area-inset-left)); padding-right:max(18px,env(safe-area-inset-right)); }
+.pastepost-account { max-width: 440px; margin: 0 auto; padding: max(48px, env(safe-area-inset-top)) 20px 24px; }
+.pastepost-account h1 { margin: 10px 0 8px; color: var(--ink); font-size: clamp(28px, 7vw, 38px); line-height: 1.1; }
+.pastepost-account > p:not(.eyebrow) { color: var(--muted); margin-bottom: 18px; }
+.pastepost-account-field { display: grid; gap: 6px; margin-bottom: 12px; color: var(--ink); }
+.pastepost-account-field input { width: 100%; }
+.vault-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.coss-app .vault-tools button { min-height: 44px; }
+.vault-recovery, .vault-sync { margin: 12px 0; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+.vault-recovery p { margin-bottom: 8px; }
+.vault-sync button { text-decoration: underline; min-height: 36px; }
+.reader-sync { color: var(--muted); margin: 0 auto 8px; max-width: 620px; font-size: 13px; }

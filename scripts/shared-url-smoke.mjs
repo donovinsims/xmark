@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { createQaSession, qaBase as base, seedQaVault } from "./pastepost-qa-context.mjs";
 
-const base = process.env.PASTEPOST_QA_URL ?? "http://127.0.0.1:8080";
 const link = "https://x.com/test/status/1234567890123456789?s=20";
 const result = {
   id: "1234567890123456789", kind: "post", source: "QA", permalink: link,
@@ -12,16 +12,16 @@ const browser = await chromium.launch({ headless: true, ...(process.env.PASTEPOS
 try {
   async function scenario(value, { cached = false, failure = false } = {}) {
     const context = await browser.newContext();
-    await context.addInitScript(({ result, cached, failure }) => {
+    await createQaSession(context);
+    await context.addInitScript(({ result, failure }) => {
       if (!localStorage.getItem("qa.initialized")) {
         localStorage.setItem("pastepost.settings", JSON.stringify({ bearerToken: "qa-token" }));
-        if (cached) localStorage.setItem("pastepost.history", JSON.stringify([result]));
         localStorage.setItem("qa.initialized", "true");
       }
       window.qaCalls = [];
       window.qaFailure = failure;
       window.qaResult = result;
-    }, { result, cached, failure });
+    }, { result, failure });
     // Stub the existing extraction boundary; all app validation, caching and UI remain real.
     await context.route(/\/src\/lib\/extract\/extract-fn\.ts(?:\?|$)/, (route) => route.fulfill({
       contentType: "application/javascript",
@@ -33,6 +33,7 @@ try {
       }`,
     }));
     const page = await context.newPage();
+    if (cached) await seedQaVault(page, result);
     const query = value === undefined ? "?keep=yes#anchor" : `?keep=yes&url=${encodeURIComponent(value)}#anchor`;
     await page.goto(base + "/" + query);
     await page.getByRole("textbox", { name: "X URL", exact: true }).waitFor();
@@ -45,7 +46,7 @@ try {
     assert.deepEqual(await page.evaluate(() => window.qaCalls), [{ input: value, bearerToken: "qa-token" }]);
     assert.equal(new URL(page.url()).search, "?keep=yes");
     assert.equal(new URL(page.url()).hash, "#anchor");
-    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("pastepost.history"))[0].id), result.id);
+    await page.getByText("Saved to Vault", { exact: true }).waitFor();
     await page.getByLabel("Extract reader", { exact: true }).getByRole("button", { name: "Vault", exact: true }).click();
     await page.getByLabel("Extract reader", { exact: true }).waitFor({ state: "hidden" });
     assert.equal(await page.evaluate(() => window.qaCalls.length), 1);

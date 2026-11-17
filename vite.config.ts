@@ -171,6 +171,9 @@ export default defineConfig(({ command, isPreview }) => ({
       ? [
           nitro({
             preset: "vercel",
+            // Keep the embedded preview driver's WASM and data files next to
+            // its module when testing the built app without a database URL.
+            traceDeps: ["@electric-sql/pglite*"],
             // Auto-registers server/middleware/* (the PWA install page +
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.
