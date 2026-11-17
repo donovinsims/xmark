@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "23 8 * * *"
   workflow_dispatch:
+    inputs:
+      verify_restore:
+        description: Restore the uploaded backup into a disposable Postgres database
+        type: boolean
+        default: true
 
 permissions: {}
 concurrency:
@@ -17,10 +22,8 @@ jobs:
     env:
       PGDATABASE: ${{ secrets.BACKUP_DATABASE_URL }}
       VAULT_BACKUP_PASSPHRASE: ${{ secrets.VAULT_BACKUP_PASSPHRASE }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
-      VAULT_BACKUP_BUCKET: ${{ vars.VAULT_BACKUP_BUCKET }}
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.VAULT_BACKUP_BLOB_TOKEN }}
+      VERIFY_RESTORE: ${{ inputs.verify_restore }}
     steps:
       - name: Encrypt a Postgres dump and store it outside Neon
         shell: bash
@@ -28,12 +31,42 @@ jobs:
           set -euo pipefail
           : "${PGDATABASE:?Set the backup database URL}"
           : "${VAULT_BACKUP_PASSPHRASE:?Set the backup encryption passphrase}"
-          : "${VAULT_BACKUP_BUCKET:?Set the private S3 bucket name}"
+          : "${BLOB_READ_WRITE_TOKEN:?Set the token for the dedicated private backup store}"
           workdir="$(mktemp -d)"
-          trap 'rm -rf "$workdir"' EXIT
-          key="pastepost/$(date -u +%Y-%m-%dT%H%M%SZ)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.dump.gpg"
+          restore_container=""
+          cleanup() {
+            if [ -n "$restore_container" ]; then docker stop "$restore_container" >/dev/null || true; fi
+            rm -rf "$workdir"
+          }
+          trap cleanup EXIT
+          # One slot per UTC day. A successful upload replaces the slot from 30
+          # days earlier and object storage never needs to list or purge files.
+          day=$(( $(date -u +%s) / 86400 ))
+          printf -v key 'pastepost/slot-%02d.dump.gpg' "$((day % 30))"
           docker run --rm -e PGDATABASE postgres:18 sh -c 'exec pg_dump --dbname="$PGDATABASE" --format=custom --no-owner --no-acl' > "$workdir/vault.dump"
           test -s "$workdir/vault.dump"
           printf '%s\n' "$VAULT_BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
             --symmetric --cipher-algo AES256 --output "$workdir/vault.dump.gpg" "$workdir/vault.dump"
-          aws s3 cp "$workdir/vault.dump.gpg" "s3://$VAULT_BACKUP_BUCKET/$key" --only-show-errors
+          npx --yes vercel@59.0.0 blob put "$workdir/vault.dump.gpg" \
+            --access private --pathname "$key" --allow-overwrite true
+          printf 'Backed up UTC day %s to %s\n' "$(date -u +%F)" "$key"
+
+          if [ "${VERIFY_RESTORE:-false}" = true ]; then
+            npx --yes vercel@59.0.0 blob get "$key" --access private --output "$workdir/download.gpg"
+            printf '%s\n' "$VAULT_BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
+              --output "$workdir/restored.dump" --decrypt "$workdir/download.gpg"
+            cmp "$workdir/vault.dump" "$workdir/restored.dump"
+            restore_container="$(docker run --rm -d -e POSTGRES_PASSWORD="$(openssl rand -hex 32)" postgres:18)"
+            for attempt in {1..30}; do
+              if docker exec "$restore_container" pg_isready -h 127.0.0.1 -U postgres >/dev/null; then break; fi
+              sleep 1
+            done
+            docker exec -i "$restore_container" pg_restore -U postgres -d postgres \
+              --no-owner --no-acl --exit-on-error < "$workdir/restored.dump"
+            migrations="$(docker exec "$restore_container" psql -X -qAt -v ON_ERROR_STOP=1 -U postgres \
+              -c "select count(*) from _migrations where name in ('0001_auth.sql', '0002_vault.sql')" )"
+            test "$migrations" = 2
+            docker exec "$restore_container" psql -X -qAt -v ON_ERROR_STOP=1 -U postgres \
+              -c 'select count(*) from vault_items, "user" where vault_items.user_id = "user".id'
+            printf '%s\n' 'Verified encrypted download and restore into isolated Postgres.'
+          fi
