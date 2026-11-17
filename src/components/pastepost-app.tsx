@@ -1,6 +1,5 @@
 import { loadDrafts, readLocal, writeLocal, readLinkDraft } from "@/lib/extract/browser-state";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LaunchDiagnostic, useLaunchDiagnostics } from "./launch-diagnostic";
 import { ArrowUp, Bookmark, Check, ChevronLeft, Copy, Download, FileCode2, FileText, FolderOpen, Link, List, LoaderCircle, Moon, RefreshCw, Send, Settings, Share2, Sun, X } from "lucide-react";
 import { strToU8, zipSync } from "fflate";
 import { toast } from "sonner";
@@ -35,7 +34,6 @@ export function PastepostApp({ sharedUrl }: { sharedUrl?: string }) {
 }
 
 function SignedInPastepost({ user, sharedUrl }: { user: AppUser; sharedUrl?: string }) {
-  const launchSnapshots = useLaunchDiagnostics();
   const { archive, retry, statuses, unsynced, revision, refresh } = useArchive(user.id);
   const [appView, setAppView] = useState<AppView>("extract");
   const [theme, setTheme] = useState<Theme>("dark");
@@ -258,7 +256,6 @@ function SignedInPastepost({ user, sharedUrl }: { user: AppUser; sharedUrl?: str
   return <div className="coss-app obsidian-dashboard-shell">
     <TopBar view={appView} theme={theme} onTheme={() => setTheme((current) => current === "dark" ? "light" : "dark")} onSettings={() => setAppView("settings")} />
     <main className="coss-main">
-      <LaunchDiagnostic snapshots={launchSnapshots} />
       {appView === "extract" && <ExtractView onPaste={() => void pasteLink()} input={input} setInput={(value) => { setInput(value); if (status === "error") { setStatus("idle"); setError(null); } }} inputRef={inputRef} canExtract={canExtract} loading={status === "loading"} error={status === "error" ? error : null} onExtract={() => void runExtract(input)} onPasteExtract={() => void pasteAndExtract()} pasteDisabled={!hydrated || pasting || status === "loading" || bulkRunning} pasting={pasting} onRetry={() => void runExtract(input, true)} onSettings={() => setAppView("settings")} bulk={{ text: bulkText, onText: (value) => { setBulkText(value); if (!bulkRunning) setBulkRows([]); }, rows: bulkRowsForView, validCount: bulkParsed.valid.length, invalidCount: bulkParsed.invalid.length, running: bulkRunning, results: bulkResults, open: bulkOpen, collapsed: bulkRows.length > 0 && !bulkRunning && bulkResults.length > 0, onToggle: () => setBulkOpen((value) => !value), onRun: () => void runBulk(), onStop: () => { bulkStopRef.current = true; }, onExportMd: exportBulkMarkdown, onExportZip: exportBulkZip, onCopyAll: () => void copyText(bulkMarkdown(), "All markdown copied") }} />}
       {unsynced.length > 0 && <section className="vault-sync" aria-label="Posts waiting to sync">
         <p role="status">{unsynced.length} {unsynced.length === 1 ? "post is" : "posts are"} not synced.</p>
