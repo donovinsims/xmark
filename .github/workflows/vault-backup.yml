@@ -25,6 +25,9 @@ jobs:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.VAULT_BACKUP_BLOB_TOKEN }}
       VERIFY_RESTORE: ${{ inputs.verify_restore }}
     steps:
+      # The upload uses scripts/vault-backup-blob.mjs, so the job needs the repo.
+      - uses: actions/checkout@v4
+
       - name: Encrypt a Postgres dump and store it outside Neon
         shell: bash
         run: |
