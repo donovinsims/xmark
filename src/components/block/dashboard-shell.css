@@ -68,8 +68,14 @@
     scrollbar-color: transparent transparent;
   }
 
-  .obsidian-dashboard-shell-scroll:is(:hover, :focus-within) {
+  .obsidian-dashboard-shell-scroll:focus-within {
     scrollbar-color: var(--obsidian-dashboard-shell-border-strong) transparent;
+  }
+
+  @media (hover: hover) {
+    .obsidian-dashboard-shell-scroll:hover {
+      scrollbar-color: var(--obsidian-dashboard-shell-border-strong) transparent;
+    }
   }
 }
 
@@ -90,8 +96,14 @@
     background: transparent;
   }
 
-  .obsidian-dashboard-shell-scroll:is(:hover, :focus-within)::-webkit-scrollbar-thumb {
+  .obsidian-dashboard-shell-scroll:focus-within::-webkit-scrollbar-thumb {
     background: var(--obsidian-dashboard-shell-border-strong);
+  }
+
+  @media (hover: hover) {
+    .obsidian-dashboard-shell-scroll:hover::-webkit-scrollbar-thumb {
+      background: var(--obsidian-dashboard-shell-border-strong);
+    }
   }
 
   .obsidian-dashboard-shell-scroll::-webkit-scrollbar-button {
